@@ -1,0 +1,46 @@
+Dear Students,
+
+attached are the files related to the project. Below is a detailed 
+description of the project.
+
+If you have any questions related to the description, feel free to ask.
+
+Notice that there might be some supplementary material files for some 
+papers (no need to study in depth those papers).
+Those papers allow you to better understand the contents.
+
+Below are group number, project description and some collaboration guidelines.
+
+Cheers,
+    Francesco Rinaldi
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Collaboration guidelines
+
+1) Every student should adequately contribute to the final project.
+2) Submitting a group project for evaluation without having 
+contributed adequately to it represents academic misconduct.
+3) Avoid Plagiarism. Please refrain from:
+                  - Copying data, codes, spreadsheets, images, or 
+other materials and using them without proper citation or 
+acknowledgment.
+             - Using material from  other students' project or a web site.
+4) Please report any case of misconduct in your group.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+You are in GROUP 8. Please always refer to this from now on when 
+communicating with us.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+7) Optimization Methods for Recommender Systems
+
+- analyze in depth the theory of the papers (FW.pdf, FW_variants.pdf, 
+FW_survey.pdf)
+
+
+3 STUDENTS:
+- develop the codes for the following algorithms:  Frank-Wolfe, 
+Pairwise Frank-Wolfe, Away-Step  Frank-Wolfe; please use suitable 
+tools to make the code efficient (e.g., line search, LMO,...).
+- test the algorithms on the the Matrix completion Problem  (Section 
+3.4  in FW_survey.pdf) using 3 Real-World Data Sets  (see, e.g., 
+https://paperswithcode.com/datasets?task=recommendation-systems - 
+suitably choose the data you like the most)
+-analize the results using plots and tables
