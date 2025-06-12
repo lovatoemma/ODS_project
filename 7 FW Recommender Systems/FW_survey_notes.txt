@@ -9,6 +9,11 @@ Conditional gradient · Sparse optimization
 - simplex
 - cardinality
 - first order information
+- what are exacly 
+    - x_k: solution at iter k
+    - A_k: active set of indexes at iter k
+    - a_k: step size at iter k (?)
+    - S_k: complete (?) set of indexes
 
 The main idea
 of the FW method is simple: to generate a sequence of feasible iterates by moving at
@@ -78,7 +83,7 @@ FW properties:
     often used as a measure of convergence (way more complicated than this in the paper)
 - O(1/k) convergence rate for convex objectives
     O(1/sqrt(k)) if non convex instead
-    
+
 FW variants:
 - Active set FW variants aim to improve the O(1/k) convergence rate and ensure support identification in finite time (whatever the fuck this means...)
 - we define for these variants:
@@ -88,3 +93,35 @@ FW variants:
     - d_ASFW_k = argmax(-d(f(x_k)t*d), for d in d_FW_k, D_away_k)
 - Pairwise FW simply takes both  d_FW_k & D_away_k:
     - d_PFW_k = d_FW_k + D_away_k = s_k - v_k
+- FW with if-face directions (FDFW): read it if you feel like it. i don't.
+- extended FW (EFW): piss yourself
+
+Sparse Approximation Properties:
+Basically says that for FW, AFW, PFW x_k is always a convex combination of elements from A_k.
+A_k is a subset of S_k so that for each k, |A_k| =< k + 1 (since you activate an index at max for each k)
+For methods with this property, convergence rate is Omega(1/k) (?) instead of O(1/K) IN HIGH DIMENSION.
+If i understood it correctly, basically O(1/k) becomes a sort of worse case optimal given the sparsity constraint.
+
+Affine Invariance:
+no clue whatsoever
+
+Support identification for the AFW:
+basically says that AFW is soo good, sucks his dick a bit and then proves it.
+"It is a classic result that the AFW under some strict complementarity conditions and
+for strongly convex objectives identifies in finite time the face containing the solution"
+
+Inexact Linear Oracle:
+In many real-world applications, linear subproblems can only be solved approximately.
+This is the reason why the convergence of FW variants is often analyzed under some
+error term for the linear minimization oracle.
+A common assumption, relaxing the FW vertex exact minimization property, 
+is to have access to a point (usually a vertex) s˜k such that an uncomprehensible formula happens.
+
+Improved rates for strongly convex objectives:
+- Linear convergence under an angle condition
+- Strongly Convex Domains
+
+Extensions:
+- Block Coordinate Frank-Wolfe method
+- Variants for the min-norm point problem
+- Variants for optimization over the trace norm ball
