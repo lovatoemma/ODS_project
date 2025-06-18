@@ -1,5 +1,3 @@
-# File: functions.py
-
 import numpy as np
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import svds
@@ -7,14 +5,14 @@ from scipy.sparse.linalg import svds
 # Problem Definition 
 class MatrixCompletionProblem:
     """
-    Encapsulates the logic for the Matrix Completion problem.
+    Logic logic for the Matrix Completion problem.
     f(X) = ||P_J(X) - P_J(U)||_F^2
     """
     def __init__(self, U_observed: csc_matrix):
         """
         Initializes the problem.
         Args:
-            U_observed: A sparse matrix (csc format) containing only the observed entries of U.
+            U_observed: A sparse matrix containing only the observed entries of U.
         """
         self.U_observed = U_observed
         self.m, self.n = U_observed.shape
