@@ -75,11 +75,17 @@ def exact_line_search(d_k: np.ndarray, grad_k: np.ndarray,
 
 # Optional/Alternative Tools 
 
-def diminishing_step_size(k: int) -> float:
+def decaying_step_size(k: int) -> float:
     """
     Returns the classic diminishing step-size.
     """
     return 2 / (k + 2)
+
+def armijo_step_size() -> float:
+    """
+    Implements the Armijo rule for step-size selection.
+    """
+    pass
 
 ### JACK'S PART
 def INDICAZIONE_IMPLEMENTAZIONE_FW(n_rows, n_cols, observed_indices, observed_values,
