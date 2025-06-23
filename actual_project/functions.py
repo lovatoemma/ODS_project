@@ -75,6 +75,6 @@ def exact_line_search(d_k: np.ndarray, grad_k: np.ndarray,
     return max(0.0, min(gamma_max, gamma_star))
 
 # DIMINISHING
-def diminishing_step_size(k: int, gamma_max: float = 1.0) -> float:
+def decaying_step_size(k: int, gamma_max: float = 1.0) -> float:
     """Returns the classic diminishing step-size gamma = 2/(k+2), clipped by gamma_max."""
     return min(gamma_max, 2 / (k + 2))

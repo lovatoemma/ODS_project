@@ -1,1 +1,4 @@
 data/
+actual_project/ml-100k/
+actual_project/rating.csv
+actual_project/__pycache__/
