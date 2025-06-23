@@ -286,7 +286,9 @@ def _update_active_set_pairwise(
         del active_set[away_atom_id]
 
     return atom_id_counter
-
+#####################################
+### FINAL ALGORITHM WITH VARIANTS ###
+#####################################
 def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompletionProblem, tau: float, max_iter: int = 100):
     """
     Unified solver for different Frank-Wolfe variants.
