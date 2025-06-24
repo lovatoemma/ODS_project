@@ -81,10 +81,11 @@ def exact_line_search(d_k: np.ndarray, grad_k: np.ndarray,
     return max(0.0, min(gamma_max, gamma_star))
 
 # DIMINISHING
-def decaying_step_size(k: int, gamma_max: float = 1.0) -> float:
+def diminishing_step_size(k: int, gamma_max: float = 1.0) -> float:
     """STEPSIZE STRATEGY: Returns the classic diminishing step-size gamma = 2/(k+2)."""
     # We still clip by gamma_max, which is crucial for Away and Pairwise steps.
     return min(gamma_max, 2 / (k + 2))
+# Ciao Rebe
 
 # ARMIJO   
 def armijo_step_size(problem, X_k: np.ndarray, d_k: np.ndarray, grad_k: np.ndarray,
