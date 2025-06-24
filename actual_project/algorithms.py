@@ -1,5 +1,5 @@
 import numpy as np
-from functions import MatrixCompletionProblem, linear_minimization_oracle, exact_line_search, decaying_step_size
+from functions import MatrixCompletionProblem, linear_minimization_oracle, exact_line_search, diminishing_step_size, armijo_step_size
 
 # CLASSIC FRANK-WOLF (FW) ALGORITHM
 def frank_wolfe_solver(problem: MatrixCompletionProblem, tau: float, max_iter: int = 100):
@@ -224,6 +224,7 @@ def pairwise_frank_wolfe_solver(problem: MatrixCompletionProblem, tau: float, ma
 # since there are a lot of common steps, we can handle all three algorithms in a unified function
 # we can help ourself with supporting functions to handle the differences in the algorithms
 # NOTE: it is still not completely clear to me the exact handling of the active set for the two variants
+
 def _update_active_set_away_step(
     s_k, active_set, weights, away_atom_id, gamma_k,
     is_fw_step, atom_id_counter
@@ -286,17 +287,18 @@ def _update_active_set_pairwise(
         del active_set[away_atom_id]
 
     return atom_id_counter
+
 #####################################
 ### FINAL ALGORITHM WITH VARIANTS ###
 #####################################
-def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompletionProblem, tau: float, max_iter: int = 100, tolerance: float = 1e-10):
+def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompletionProblem, tau: float, max_iter: int = 100):
     """
     Unified solver for different Frank-Wolfe variants.
 
     
     Args:
         variant: 'classic', 'away_step', or 'pairwise'.
-        stepsize: 'exact', 'decaying' or 'armijo'.
+        stepsize: 'exact', 'diminishing' or 'armijo'.
         problem: The MatrixCompletionProblem object.
         tau: The radius of the nuclear norm ball.
         max_iter: Maximum number of iterations.
@@ -305,7 +307,7 @@ def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompl
         X_k: The solution matrix.
         history: A list of objective function values at each iteration.
     """
-    print(f"Starting Frank-Wolfe Solver... selected {variant} variant")
+    print(f"Starting Pairwise Frank-Wolfe Solver... selected {variant} variant")
     
     # initialization
     if variant not in ['classic', 'away_step', 'pairwise']:
@@ -320,7 +322,7 @@ def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompl
         # Compute the initial gradient
         grad_k_init = problem.gradient(X_k)
         # Compute the initial FW atom (s0)
-        s0 = linear_minimization_oracle(grad_k_init, tau)
+        s0 = linear_minimization_oracle(-grad_k_init, tau)
         # Initialize active set and weights
         active_set = {0: s0}
         weights = {0: 1.0}
@@ -341,13 +343,13 @@ def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompl
         grad_k = problem.gradient(X_k)
 
         # FW direction
-        s_k = linear_minimization_oracle(grad_k, tau)
+        s_k = linear_minimization_oracle(-grad_k, tau)
         d_fw = s_k - X_k
         fw_gap = -np.sum(grad_k * d_fw)
         
         # Check stopping criterion (FW gap)
-        if fw_gap < tolerance:
-            print(f"Convergence reached (FW gap ({fw_gap}) is small).")
+        if fw_gap < 1e-5:
+            print("Convergence reached (FW gap is small).")
             break
 
         if variant == 'classic':
@@ -388,9 +390,12 @@ def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompl
         # TODO : experiment with different step-size strategies
         # 
         if stepsize == 'exact':
-            gamma_k = exact_line_search(d_k, grad_k, problem, gamma_max)
-        elif stepsize == 'decaying':
-            gamma_k = decaying_step_size(k, gamma_max)
+            gamma_k = exact_line_search(X_k, d_k, grad_k, problem, gamma_max)
+        elif stepsize == 'diminishing':
+            gamma_k = diminishing_step_size(k, max_iter, gamma_max)
+        elif stepsize == 'armijo':
+            # TODO: TO BE IMPLEMENTED!!!! (if we want)
+            gamma_k = armijo_step_size() 
         # Update solution
         X_k = X_k + gamma_k * d_k
 
