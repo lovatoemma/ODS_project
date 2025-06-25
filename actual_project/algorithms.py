@@ -322,7 +322,7 @@ def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompl
         # Compute the initial gradient
         grad_k_init = problem.gradient(X_k)
         # Compute the initial FW atom (s0)
-        s0 = linear_minimization_oracle(-grad_k_init, tau)
+        s0 = linear_minimization_oracle(grad_k_init, tau)
         # Initialize active set and weights
         active_set = {0: s0}
         weights = {0: 1.0}
@@ -343,7 +343,7 @@ def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompl
         grad_k = problem.gradient(X_k)
 
         # FW direction
-        s_k = linear_minimization_oracle(-grad_k, tau)
+        s_k = linear_minimization_oracle(grad_k, tau)
         d_fw = s_k - X_k
         fw_gap = -np.sum(grad_k * d_fw)
         
@@ -390,11 +390,10 @@ def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompl
         # TODO : experiment with different step-size strategies
         # 
         if stepsize == 'exact':
-            gamma_k = exact_line_search(X_k, d_k, grad_k, problem, gamma_max)
+            gamma_k = exact_line_search(d_k, grad_k, problem, gamma_max)
         elif stepsize == 'diminishing':
-            gamma_k = diminishing_step_size(k, max_iter, gamma_max)
+            gamma_k = diminishing_step_size(k, gamma_max)
         elif stepsize == 'armijo':
-            # TODO: TO BE IMPLEMENTED!!!! (if we want)
             gamma_k = armijo_step_size() 
         # Update solution
         X_k = X_k + gamma_k * d_k
