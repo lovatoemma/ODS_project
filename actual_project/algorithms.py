@@ -229,31 +229,31 @@ def _update_active_set_away_step(
     s_k, active_set, weights, away_atom_id, gamma_k,
     is_fw_step, atom_id_counter
 ):
-    # if we do a FW step, we need to add the new atom s_k to the active set
+    # If we do a FW step, we need to add the new atom s_k to the active set
     if is_fw_step:
-        # we assign to the active set, for the new_atom_id, the atom s_k
         new_atom_id = atom_id_counter
         active_set[new_atom_id] = s_k
-        # If the new atom is not already in the weights, initialize it
+        # Initialize the new atom's weight if not present
         if new_atom_id not in weights:
             weights[new_atom_id] = 0.0
-        # Increment the atom ID counter
         atom_id_counter += 1
-        # Update weights: move mass from away_atom_id to new_atom_id
-        for atom_id in list(weights.keys()):
-            weights[atom_id] *= (1 - gamma_k)
+        # Update all weights: scale by (1 - gamma_k)
+        factor = (1 - gamma_k)
+        for atom_id in weights:
+            weights[atom_id] *= factor
+        # Add gamma_k to the new atom
         weights[new_atom_id] += gamma_k
-    else:  # Away step
-        # Update weights: move mass from away_atom_id to s_k
-        for atom_id in list(weights.keys()):
+    else:
+        # Away step: update weights, moving mass from away_atom_id to all others
+        factor = (1 + gamma_k)
+        for atom_id in weights:
             if atom_id == away_atom_id:
-                weights[atom_id] = weights[atom_id] * (1 + gamma_k) - gamma_k
+                weights[atom_id] = weights[atom_id] * factor - gamma_k
             else:
-                weights[atom_id] *= (1 + gamma_k)
+                weights[atom_id] *= factor
 
-    # Clean up: remove atoms with negligible weights
+    # Clean up: remove atoms with negligible weights from both active_set and weights
     to_remove = [atom_id for atom_id, w in weights.items() if w < 1e-9]
-    # Remove atoms with negligible weights from both active_set and weights
     for atom_id in to_remove:
         del weights[atom_id]
         del active_set[atom_id]
@@ -263,25 +263,23 @@ def _update_active_set_away_step(
 def _update_active_set_pairwise(
     s_k, active_set, weights, away_atom_id, gamma_k, atom_id_counter
 ):
-    # Check if s_k already in set
-    found_id = None
-    for a_id, atom in active_set.items():
-        if np.allclose(atom, s_k):
-            found_id = a_id
-            break
-    # If s_k is not in the active set, we add it
+    # atom lookup
+    s_k_hash = hash(np.round(s_k, 8).tobytes())
+    atom_hash_map = {hash(np.round(atom, 8).tobytes()): a_id for a_id, atom in active_set.items()}
+    found_id = atom_hash_map.get(s_k_hash, None)
 
+    # If s_k is not in the active set, add it
     if found_id is None:
         found_id = atom_id_counter
         active_set[found_id] = s_k
-        # initialize the new atom weight
         weights[found_id] = 0.0
         atom_id_counter += 1
+
     # Update weights: move mass from away_atom_id to found_id
     weights[away_atom_id] -= gamma_k
     weights[found_id] += gamma_k
 
-    # Clean up: remove atoms with negligible weights
+    # Clean up: remove atoms with negligible weights from both active_set and weights
     if weights[away_atom_id] < 1e-9:
         del weights[away_atom_id]
         del active_set[away_atom_id]
@@ -394,7 +392,7 @@ def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompl
         elif stepsize == 'diminishing':
             gamma_k = diminishing_step_size(k, gamma_max)
         elif stepsize == 'armijo':
-            gamma_k = armijo_step_size() 
+            gamma_k = armijo_step_size(problem, X_k, d_k, grad_k, gamma_max) 
         # Update solution
         X_k = X_k + gamma_k * d_k
 
