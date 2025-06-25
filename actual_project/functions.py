@@ -37,6 +37,7 @@ class MatrixCompletionProblem:
     def gradient(self, X: np.ndarray) -> np.ndarray:
         """
         Calculates the gradient of f(X). ∇f(X) = 2 * P_J(X - U).
+        Returns a dense numpy array for compatibility with downstream code.
         """
         return 2 * self.project_on_omega(X - self.U_dense_observed)
 
@@ -49,7 +50,6 @@ class MatrixCompletionProblem:
 def linear_minimization_oracle(grad: np.ndarray, tau: float) -> np.ndarray:
     """
     Solves the linear minimization subproblem for the nuclear norm ball.
-    s_k = argmin_{s: ||s||* <= tau} <s, grad>
     The solution is -tau * u1 * v1.T, where u1, v1 are the top singular vectors of `grad`.
     """
     try:
@@ -58,7 +58,6 @@ def linear_minimization_oracle(grad: np.ndarray, tau: float) -> np.ndarray:
         u_full, _, vt_full = np.linalg.svd(grad, full_matrices=False)
         u = u_full[:, 0:1]
         vt = vt_full[0:1, :]
-        
     s_k = -tau * (u.reshape(-1, 1) @ vt.reshape(1, -1))
     return s_k
 
@@ -133,4 +132,11 @@ def armijo_step_size(problem, X_k: np.ndarray, d_k: np.ndarray, grad_k: np.ndarr
         if gamma_k < 1e-12:
             return 0.0
         
-
+def accuracy_spectral(problem: MatrixCompletionProblem, X: np.ndarray) -> float:
+    """
+    Computes the spectral accuracy of the current solution X.
+    This is defined as the largest singular value of the residual matrix.
+    """
+    residual = problem.project_on_omega(X - problem.U_dense_observed)
+    u, s, vt = np.linalg.svd(residual, full_matrices=False)
+    return s[0]  # Return the largest singular

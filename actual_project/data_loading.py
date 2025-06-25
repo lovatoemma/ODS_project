@@ -10,8 +10,10 @@ from sklearn.model_selection import train_test_split
 #####################
 
 # 1) MOVIELENS 100K
-def load_movielens(path_to_data='data/ml-100k/u.data'):
-    """Loads and prepares the MovieLens 100k dataset."""
+# Aggiunto: subset_percent_rows e subset_percent_cols per ridurre la dimensione del dataset
+
+def load_movielens(path_to_data='data/ml-100k/u.data', subset_percent_rows=1.0, subset_percent_cols=1.0):
+    """Loads and prepares the MovieLens 100k dataset. Normalizes ratings to [0, 1]. Optionally subselects rows/cols."""
     try:
         df = pd.read_csv(path_to_data, sep='\t', header=None, names=['user_id', 'item_id', 'rating', 'timestamp'])
     except FileNotFoundError:
@@ -19,6 +21,27 @@ def load_movielens(path_to_data='data/ml-100k/u.data'):
         print("Download from: https://grouplens.org/datasets/movielens/100k/")
         return None, None
 
+    # Subset users
+    if subset_percent_rows < 1.0:
+        user_sample = np.random.choice(df['user_id'].unique(),
+                                       int(len(df['user_id'].unique()) * subset_percent_rows),
+                                       replace=False)
+        df = df[df['user_id'].isin(user_sample)]
+    # Subset items
+    if subset_percent_cols < 1.0:
+        item_sample = np.random.choice(df['item_id'].unique(),
+                                       int(len(df['item_id'].unique()) * subset_percent_cols),
+                                       replace=False)
+        df = df[df['item_id'].isin(item_sample)]
+
+    # Normalizza rating in [0, 1]
+    min_rating = df['rating'].min()
+    max_rating = df['rating'].max()
+    if max_rating > min_rating:
+        df['rating'] = (df['rating'] - min_rating) / (max_rating - min_rating)
+    else:
+        df['rating'] = 0.0
+
     user_map = {uid: i for i, uid in enumerate(df['user_id'].unique())}
     item_map = {iid: i for i, iid in enumerate(df['item_id'].unique())}
     
@@ -27,82 +50,94 @@ def load_movielens(path_to_data='data/ml-100k/u.data'):
     
     num_users, num_items = len(user_map), len(item_map)
     
-    train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
+    train_df, test_df = train_test_split(df, test_size=0.4, random_state=42)
     
     train_matrix = csc_matrix((train_df['rating'], (train_df['user_idx'], train_df['item_idx'])), shape=(num_users, num_items))
     test_matrix = csc_matrix((test_df['rating'], (test_df['user_idx'], test_df['item_idx'])), shape=(num_users, num_items))
-                                     
+                                 
     return train_matrix, test_matrix
 
 
-# 2) JESTER 4 (over 100K ratings)
-def load_jester(path_to_data='data/jester-data/jester_data.xlsx'):
-    """Loads and prepares the Jester 4 dataset from an Excel file."""
+# 2) JESTER 4
+# Aggiunto: subset_percent_rows e subset_percent_cols
+
+def load_jester(path_to_data='data/jesterDataset4/jester_data.xlsx', subset_percent_rows=1.0, subset_percent_cols=1.0):
+    """Loads and prepares the Jester 4 dataset from an Excel file (matrix format). Normalizes ratings to [0, 1]. Optionally subselects rows/cols."""
     try:
         df = pd.read_excel(path_to_data, header=None)
+        # print(df.head())
     except FileNotFoundError:
         print("Dataset not found. Please download Jester 4 and place jester_data.xlsx in a 'jester-data' folder.")
         print("Download from: https://eigentaste.berkeley.edu/dataset/")
         return None, None
-
-    # Rimuovi eventuali colonne di ID utente se presenti (Jester a volte ha la prima colonna come count o ID)
-    if df.shape[1] > 100:  # tipico: 100 items, una colonna extra
+    if df.shape[1] > 100:
         df = df.iloc[:, 1:]
-
-    # Trasforma in formato long: ogni riga = (user, item, rating)
-    df_long = df.stack().reset_index()
-    df_long.columns = ['user_id', 'item_id', 'rating']
-
-    # Filtra solo i rating realmente presenti (Jester usa 99 o NaN per missing)
-    df_long = df_long[~df_long['rating'].isna()]
-    df_long = df_long[df_long['rating'] != 99]
-
-    user_map = {uid: i for i, uid in enumerate(df_long['user_id'].unique())}
-    item_map = {iid: i for i, iid in enumerate(df_long['item_id'].unique())}
-
-    df_long['user_idx'] = df_long['user_id'].map(user_map)
-    df_long['item_idx'] = df_long['item_id'].map(item_map)
-
-    num_users, num_items = len(user_map), len(item_map)
-
-    train_df, test_df = train_test_split(df_long, test_size=0.2, random_state=42)
-
-    train_matrix = csc_matrix((train_df['rating'], (train_df['user_idx'], train_df['item_idx'])), shape=(num_users, num_items))
-    test_matrix = csc_matrix((test_df['rating'], (test_df['user_idx'], test_df['item_idx'])), shape=(num_users, num_items))
-
+    ratings = df.replace(99, 0).fillna(0).values
+    # Subset users
+    if subset_percent_rows < 1.0:
+        n_rows = int(ratings.shape[0] * subset_percent_rows)
+        row_idx = np.random.choice(ratings.shape[0], n_rows, replace=False)
+        ratings = ratings[row_idx, :]
+    # Subset items
+    if subset_percent_cols < 1.0:
+        n_cols = int(ratings.shape[1] * subset_percent_cols)
+        col_idx = np.random.choice(ratings.shape[1], n_cols, replace=False)
+        ratings = ratings[:, col_idx]
+    min_rating = ratings.min()
+    max_rating = ratings.max()
+    if max_rating > min_rating:
+        ratings = (ratings - min_rating) / (max_rating - min_rating)
+    else:
+        ratings = np.zeros_like(ratings)
+    ratings_sparse = csc_matrix(ratings)
+    num_users = ratings_sparse.shape[0]
+    idx = np.arange(num_users)
+    train_idx, test_idx = train_test_split(idx, test_size=0.4, random_state=42)
+    train_matrix = ratings_sparse[train_idx, :]
+    test_matrix = ratings_sparse[test_idx, :]
     return train_matrix, test_matrix
 
-# 3) STEAM (200K ratings)
-def load_steam(path_to_data='steam-data/game_play.dat'):
+# 3) STEAM
+# Aggiunto: subset_percent_rows e subset_percent_cols
+
+def load_steam(path_to_data='data/steam/game_play.dat', subset_percent_rows=1.0, subset_percent_cols=1.0):
     """
     Loads and prepares the Steam dataset from game_play.dat.
-    Uses playtime as implicit rating.
+    Uses playtime as implicit rating. Normalizes playtime to [0, 1]. Optionally subselects rows/cols.
     """
     try:
-        # Il file è separato da virgole, senza header: user_id, item_id, playtime
-        df = pd.read_csv(path_to_data, header=None, names=['user_id', 'item_id', 'playtime'])
+        df = pd.read_csv(path_to_data, sep='\t', header=0)
+        df.columns = ['User_ID', 'tGame_ID', 'tHours']
+        # print(df.head())
     except FileNotFoundError:
         print("Dataset not found. Please download Steam dataset and place game_play.dat in a 'steam-data' folder.")
         print("Download from: https://www.kaggle.com/datasets/gregorut/videogamesales")
         return None, None
-
-    # Filtra eventuali righe senza playtime valido
-    df = df[df['playtime'].notna()]
-    # Puoi anche filtrare playtime=0 se vuoi solo interazioni "positive"
-    # df = df[df['playtime'] > 0]
-
-    # Mappa user e item a indici consecutivi
-    user_map = {uid: i for i, uid in enumerate(df['user_id'].unique())}
-    item_map = {iid: i for i, iid in enumerate(df['item_id'].unique())}
-
-    df['user_idx'] = df['user_id'].map(user_map)
-    df['item_idx'] = df['item_id'].map(item_map)
-
+    df = df[df['tHours'].notna()]
+    # Subset users
+    if subset_percent_rows < 1.0:
+        user_sample = np.random.choice(df['User_ID'].unique(),
+                                       int(len(df['User_ID'].unique()) * subset_percent_rows),
+                                       replace=False)
+        df = df[df['User_ID'].isin(user_sample)]
+    # Subset items
+    if subset_percent_cols < 1.0:
+        item_sample = np.random.choice(df['tGame_ID'].unique(),
+                                       int(len(df['tGame_ID'].unique()) * subset_percent_cols),
+                                       replace=False)
+        df = df[df['tGame_ID'].isin(item_sample)]
+    min_hours = df['tHours'].min()
+    max_hours = df['tHours'].max()
+    if max_hours > min_hours:
+        df['tHours'] = (df['tHours'] - min_hours) / (max_hours - min_hours)
+    else:
+        df['tHours'] = 0.0
+    user_map = {uid: i for i, uid in enumerate(df['User_ID'].unique())}
+    item_map = {iid: i for i, iid in enumerate(df['tGame_ID'].unique())}
+    df['user_idx'] = df['User_ID'].map(user_map)
+    df['item_idx'] = df['tGame_ID'].map(item_map)
     num_users, num_items = len(user_map), len(item_map)
-
-    train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
-
-    train_matrix = csc_matrix((train_df['playtime'], (train_df['user_idx'], train_df['item_idx'])), shape=(num_users, num_items))
-    test_matrix = csc_matrix((test_df['playtime'], (test_df['user_idx'], test_df['item_idx'])), shape=(num_users, num_items))
-
+    train_df, test_df = train_test_split(df, test_size=0.4, random_state=42)
+    train_matrix = csc_matrix((train_df['tHours'], (train_df['user_idx'], train_df['item_idx'])), shape=(num_users, num_items))
+    test_matrix = csc_matrix((test_df['tHours'], (test_df['user_idx'], test_df['item_idx'])), shape=(num_users, num_items))
     return train_matrix, test_matrix

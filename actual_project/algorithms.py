@@ -307,7 +307,7 @@ def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompl
         X_k: The solution matrix.
         history: A list of objective function values at each iteration.
     """
-    print(f"Starting Pairwise Frank-Wolfe Solver... selected {variant} variant")
+    print(f"Starting Frank-Wolfe Solver... selected {variant} variant")
     
     # initialization
     if variant not in ['classic', 'away_step', 'pairwise']:
@@ -349,7 +349,7 @@ def unified_frank_wolfe_solver(variant: str, stepsize: str, problem: MatrixCompl
         
         # Check stopping criterion (FW gap)
         if fw_gap < 1e-5:
-            print("Convergence reached (FW gap is small).")
+            print(f"Convergence reached (FW gap is {fw_gap}).")
             break
 
         if variant == 'classic':
