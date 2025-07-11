@@ -10,8 +10,6 @@ from sklearn.model_selection import train_test_split
 #####################
 
 # 1) MOVIELENS 100K
-# Aggiunto: subset_percent_rows e subset_percent_cols per ridurre la dimensione del dataset
-
 def load_movielens(path_to_data='data/ml-100k/u.data', subset_percent_rows=1.0, subset_percent_cols=1.0):
     """Loads and prepares the MovieLens 100k dataset. Normalizes ratings to [0, 1]. Optionally subselects rows/cols."""
     try:
@@ -34,7 +32,7 @@ def load_movielens(path_to_data='data/ml-100k/u.data', subset_percent_rows=1.0, 
                                        replace=False)
         df = df[df['item_id'].isin(item_sample)]
 
-    # Normalizza rating in [0, 1]
+    # Normalize rating in [0, 1]
     min_rating = df['rating'].min()
     max_rating = df['rating'].max()
     if max_rating > min_rating:
@@ -59,8 +57,6 @@ def load_movielens(path_to_data='data/ml-100k/u.data', subset_percent_rows=1.0, 
 
 
 # 2) JESTER 4
-# Aggiunto: subset_percent_rows e subset_percent_cols
-
 def load_jester(path_to_data='data/jesterDataset4/jester_data.xlsx', subset_percent_rows=1.0, subset_percent_cols=1.0):
     """Loads and prepares the Jester 4 dataset from an Excel file (matrix format). Normalizes ratings to [0, 1]. Optionally subselects rows/cols."""
     try:
@@ -98,8 +94,6 @@ def load_jester(path_to_data='data/jesterDataset4/jester_data.xlsx', subset_perc
     return train_matrix, test_matrix
 
 # 3) STEAM
-# Aggiunto: subset_percent_rows e subset_percent_cols
-
 def load_steam(path_to_data='data/steam/game_play.dat', subset_percent_rows=1.0, subset_percent_cols=1.0):
     """
     Loads and prepares the Steam dataset from game_play.dat.

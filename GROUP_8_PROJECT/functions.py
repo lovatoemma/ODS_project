@@ -65,7 +65,7 @@ def linear_minimization_oracle(grad: np.ndarray, tau: float) -> np.ndarray:
 ### STEP SIZES ###
 ##################
 
-# LINE SEARCH
+# EXACT LINE SEARCH
 def exact_line_search(d_k: np.ndarray, grad_k: np.ndarray,
                       problem: MatrixCompletionProblem, gamma_max: float = 1.0) -> float:
     """STEPSIZE STRATEGY: Calculates the optimal step-size gamma."""
@@ -84,7 +84,7 @@ def diminishing_step_size(k: int, gamma_max: float = 1.0) -> float:
     """STEPSIZE STRATEGY: Returns the classic diminishing step-size gamma = 2/(k+2)."""
     # We still clip by gamma_max, which is crucial for Away and Pairwise steps.
     return min(gamma_max, 2 / (k + 2))
-# Ciao Rebe
+
 
 # ARMIJO   
 def armijo_step_size(problem, X_k: np.ndarray, d_k: np.ndarray, grad_k: np.ndarray,
@@ -131,7 +131,11 @@ def armijo_step_size(problem, X_k: np.ndarray, d_k: np.ndarray, grad_k: np.ndarr
         # Failsafe to prevent infinitely small step-sizes
         if gamma_k < 1e-12:
             return 0.0
-        
+
+
+################
+### ACCURACY ###
+################
 def accuracy_spectral(problem: MatrixCompletionProblem, X: np.ndarray) -> float:
     """
     Computes the spectral accuracy of the current solution X.
